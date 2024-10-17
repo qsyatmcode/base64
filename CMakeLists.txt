@@ -16,4 +16,5 @@ add_executable(base64 src/main.c
         src/alphabet.h
         src/encoding.h
         src/group.h
-        src/encoding.c)
+        src/encoding.c
+        src/decoding.h)

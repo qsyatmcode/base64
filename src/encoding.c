@@ -1,25 +1,17 @@
 ﻿#include "encoding.h"
 
-struct source_octets {
-    const size_t size;
-    const bool has_additional;
-    struct source_group* groups;
-};
+#include "alphabet.h"
+#include "group.h"
 
-struct encoded_octets {
-    const size_t size;
-    struct group* groups;
-};
+#include <stdint.h>
+#include <string.h>
+#include <malloc.h>
 
-
-static void get_source_group(const char* input, struct source_octets* source);
+void read_octets(const char* input, struct source_octets* source);
 static struct group encode_source_octet(const struct source_group* sg);
 
-static void debug_source_octets_print(const struct source_octets* source);
-
-
-struct encoded_octets* read_octets(const char* input) {
-    if(!input) return NULL;
+size_t encode(const char* input, char** output) {
+    if(!input) return 0;
 
     const size_t input_len = strlen(input);
     const size_t full_groups_count = input_len / 3;
@@ -27,29 +19,45 @@ struct encoded_octets* read_octets(const char* input) {
 
     struct source_group s[source_size];
     struct source_octets source = {
-        .size = source_size,
-        .has_additional = input_len % 3 != 0,
-        .groups = s,
+            .size = source_size,
+            .has_additional = input_len % 3 != 0,
+            .groups = s,
     };
 
-    get_source_group(input, &source);
+    read_octets(input, &source);
 
-    debug_source_octets_print(&source);
+    struct group encoded_groups[source_size];
+    struct encoded_octets encoded = {
+            .size = source.size,
+            .groups = encoded_groups,
+    };
 
     for(size_t i = 0; i < source.size; i++) {
-        struct group d = encode_source_octet(&source.groups[i]);
-        //printf("%c, ", (unsigned char)d.sextet1);
-        //printf("%c, ", (unsigned char)d.sextet2);
-        //printf("%c, ", (unsigned char)d.sextet3);
-        //printf("%c;\n", (unsigned char)d.sextet4);
+        encoded.groups[i] = encode_source_octet(&source.groups[i]);
     }
 
-    return NULL;
+    const bool add_zerochar = encoded.groups[encoded.size - 1].sextet4 != 0;
+    const size_t result_size = sizeof(char) * ((encoded.size * 4) + (size_t)add_zerochar);
+    char* result = (char*) malloc( result_size );
+    if(!result) return 0;
+
+    size_t offset = 0;
+    for(size_t i = 0; i < encoded.size; i++) {
+        result[i + offset++] = alphabet[encoded.groups[i].sextet1];
+        result[i + offset++] = alphabet[encoded.groups[i].sextet2];
+        result[i + offset++] = alphabet[encoded.groups[i].sextet3];
+        result[i + offset] = alphabet[encoded.groups[i].sextet4];
+    }
+
+    result[result_size - 1] = '\0';
+
+    *output = result;
+
+    return result_size;
 }
 
-
-// Returns size of groups
-static void get_source_group(const char* input, struct source_octets* source) {
+void read_octets(const char* input, struct source_octets* source) {
+    //get_source_group(input, source);
     const size_t input_len = strlen(input);
     const char* const limit = input + input_len;
     const char* it = input;
@@ -80,7 +88,7 @@ static void get_source_group(const char* input, struct source_octets* source) {
 }
 
 static struct group encode_source_octet(const struct source_group* sg) {
-    uint32_t hex = ( (uint32_t)sg->octet1 << 16 ) | ( (uint32_t)sg->octet2 << 8 ) | ( (uint32_t)sg->octet3 );
+    const uint32_t hex = ( (uint32_t)sg->octet1 << 16 ) | ( (uint32_t)sg->octet2 << 8 ) | ( (uint32_t)sg->octet3 );
 
     struct sextet {
         uint8_t n: 6;
@@ -88,22 +96,11 @@ static struct group encode_source_octet(const struct source_group* sg) {
 
     for(uint8_t i = 0; i < 4; i++) oct[i].n = (hex >> (6 * i)) & 0x3F;
 
-    // 0x0 if padding
+    // 0x0 if is padding (0x3D)
     return (struct group) {
         .sextet1 = oct[3].n,
         .sextet2 = oct[2].n,
         .sextet3 = oct[1].n,
         .sextet4 = oct[0].n,
     };
-}
-
-
-static void debug_source_octets_print(const struct source_octets* source) {
-    printf("Size: %zu\n", source->size);
-    for(size_t i = 0; i < source->size; i++) {
-        printf("Oktet %zu: ", i);
-        printf("%c, ", (char)source->groups[i].octet1);
-        printf("%c, ", (char)source->groups[i].octet2);
-        printf("%c;\n", (char)source->groups[i].octet3);
-    }
 }

@@ -20,9 +20,15 @@ int main(void) {
         return EXIT_FAILURE;
     }
 
-    read_octets(input_buffer);
+    char* out = NULL;
 
-    printf("%s", input_buffer);
+    if(!encode(input_buffer, &out)) {
+        return EXIT_FAILURE;
+    }
+
+    printf("%s", out);
+
+    free(out);
 
     return EXIT_SUCCESS;
 }

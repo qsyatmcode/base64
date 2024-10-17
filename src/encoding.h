@@ -1,15 +1,9 @@
 ﻿#ifndef BASE64_ENCODING_H
 #define BASE64_ENCODING_H
 
-#include "alphabet.h"
-#include "group.h"
-
-#include <stdint.h>
-#include <stdbool.h>
-#include <string.h>
-#include <stdio.h>
 #include <inttypes.h>
+#include <stddef.h>
 
-struct encoded_octets* read_octets(const char* input);
+size_t encode(const char* input, char** output);
 
 #endif //BASE64_ENCODING_H

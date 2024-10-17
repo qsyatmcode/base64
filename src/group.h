@@ -2,12 +2,7 @@
 #define BASE64_GROUP_H
 
 #include <stdint.h>
-
-/*
-   struct group gr = {
-    4010:	01 01                	add    DWORD PTR [rcx],eax
-    4012:	01 01                	add    DWORD PTR [rcx],eax
-*/
+#include <stdbool.h>
 
 struct group {
     uint8_t sextet1:6;
@@ -25,6 +20,17 @@ struct source_group {
 union source_group_raw {
     struct source_group sg;
     uint8_t raw[3];
+};
+
+struct source_octets {
+    const size_t size;
+    const bool has_additional;
+    struct source_group* groups;
+};
+
+struct encoded_octets {
+    const size_t size;
+    struct group* groups;
 };
 
 #endif //BASE64_GROUP_H
