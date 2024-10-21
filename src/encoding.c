@@ -1,11 +1,9 @@
-﻿#include "encoding.h"
-
-#include "alphabet.h"
-#include "group.h"
-
-#include <stdint.h>
+﻿#include <stdint.h>
 #include <string.h>
 #include <malloc.h>
+
+#include "encoding.h"
+#include "group.h"
 
 void read_octets(const char* input, struct source_octets* source);
 static struct group encode_source_octet(const struct source_group* sg);
@@ -36,17 +34,17 @@ size_t encode(const char* input, char** output) {
         encoded.groups[i] = encode_source_octet(&source.groups[i]);
     }
 
-    const bool add_zerochar = encoded.groups[encoded.size - 1].sextet4 != 0;
-    const size_t result_size = sizeof(char) * ((encoded.size * 4) + (size_t)add_zerochar);
+    //const bool add_zerochar = encoded.groups[encoded.size - 1].sextet4 != 0;
+    const size_t result_size = sizeof(char) * (encoded.size * 4 + 1);
     char* result = (char*) malloc( result_size );
     if(!result) return 0;
 
     size_t offset = 0;
     for(size_t i = 0; i < encoded.size; i++) {
-        result[i + offset++] = alphabet[encoded.groups[i].sextet1];
-        result[i + offset++] = alphabet[encoded.groups[i].sextet2];
-        result[i + offset++] = alphabet[encoded.groups[i].sextet3];
-        result[i + offset] = alphabet[encoded.groups[i].sextet4];
+        result[i + offset++] = alphabet_encode[encoded.groups[i].sextet1 ? encoded.groups[i].sextet1 : ALBT_PADDING];
+        result[i + offset++] = alphabet_encode[encoded.groups[i].sextet2 ? encoded.groups[i].sextet2 : ALBT_PADDING];
+        result[i + offset++] = alphabet_encode[encoded.groups[i].sextet3 ? encoded.groups[i].sextet3 : ALBT_PADDING];
+        result[i + offset] = alphabet_encode[encoded.groups[i].sextet4 ? encoded.groups[i].sextet4 : ALBT_PADDING];
     }
 
     result[result_size - 1] = '\0';
@@ -98,9 +96,9 @@ static struct group encode_source_octet(const struct source_group* sg) {
 
     // 0x0 if is padding (0x3D)
     return (struct group) {
-        .sextet1 = oct[3].n,
-        .sextet2 = oct[2].n,
-        .sextet3 = oct[1].n,
-        .sextet4 = oct[0].n,
+        .sextet1 = oct[3].n, // ? oct[3].n : 0x3D,
+        .sextet2 = oct[2].n, // ? oct[2].n : 0x3D,
+        .sextet3 = oct[1].n, // ? oct[1].n : 0x3D,
+        .sextet4 = oct[0].n, // ? oct[0].n : 0x3D,
     };
 }

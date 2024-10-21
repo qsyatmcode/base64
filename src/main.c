@@ -1,11 +1,8 @@
 ﻿#include <stdio.h>
-#include <inttypes.h>
-#include <malloc.h>
 #include <stdlib.h>
-#include <string.h>
-#include <stdbool.h>
 
 #include "encoding.h"
+#include "decoding.h"
 
 #define INPUT_BUFFER_SIZE 32
 
@@ -20,15 +17,27 @@ int main(void) {
         return EXIT_FAILURE;
     }
 
-    char* out = NULL;
-
-    if(!encode(input_buffer, &out)) {
+    char* encoded = NULL;
+    if(!encode(input_buffer, &encoded)) {
+        printf("Encoding failed");
         return EXIT_FAILURE;
     }
 
-    printf("%s", out);
+    printf("%s\n", encoded);
 
-    free(out);
+    char* decoded = NULL;
+    size_t size = 0;
+    if(!(size = decode(encoded, &decoded))) {
+        printf("Decoding failed\n");
+
+        free(encoded);
+        return EXIT_FAILURE;
+    }
+
+    printf("%s\n", decoded);
+
+    free(encoded);
+    free(decoded);
 
     return EXIT_SUCCESS;
 }

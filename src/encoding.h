@@ -1,8 +1,8 @@
 ﻿#ifndef BASE64_ENCODING_H
 #define BASE64_ENCODING_H
 
-#include <inttypes.h>
 #include <stddef.h>
+#include "alphabet.h"
 
 size_t encode(const char* input, char** output);
 

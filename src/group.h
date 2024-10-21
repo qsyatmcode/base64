@@ -4,6 +4,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+//#include "alphabet.h"
+
 struct group {
     uint8_t sextet1:6;
     uint8_t sextet2:6;
